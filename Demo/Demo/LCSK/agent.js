@@ -148,11 +148,11 @@ $(function () {
         }
     };
 
-    myHub.client.newVisit = function (page, referrer, city, country, chatWith, connectionId) {
+    myHub.client.newVisit = function (userName, referrer, city, country, chatWith, connectionId) {
         var d = new Date();
         $('#current-visits > tbody').prepend(
             '<tr><td><abbr class="timeago" title="' + d.toISOString() + '">' + d.toISOString() + '</abbr></td>' +
-            '<td>' + page + '</td>' +
+            '<td>' + userName + '</td>' +
             '<td>' + referrer + '</td>' +
             '<td>' + city + '</td>' +
             '<td>' + country + '</td>' +
@@ -190,11 +190,11 @@ $(function () {
         $('#chat' + id).find('abbr.timeago').timeago();
     };
 
-    myHub.client.visitorSwitchPage = function (lastId, newId, newPage) {
+    myHub.client.visitorSwitchPage = function (lastId, newId, userName) {
         chatMessages.splice(lastId);
 
         var session = [];
-        session.push('<strong>system</strong> The visitor is now on: ' + newPage);
+        session.push('<strong>system</strong>Visitor '+ userName +' is logged in ');
 
         chatMessages.push(newId);
         chatMessages[newId] = session;
@@ -202,7 +202,7 @@ $(function () {
 
         // are we currently viewing that chat session?
         if (lastId == getCurrentChatId()) {
-            $('#chatmsgs' + lastId).append('<p><strong>system</strong> The visitor is now on: ' + newPage + '</p>');
+            $('#chatmsgs' + lastId).append('<p><strong>system</strong>Visitor '+ userName +' is logged in </p>');
 
             scrollDiv($('#chatmsgs' + lastId));
 

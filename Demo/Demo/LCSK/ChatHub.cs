@@ -115,7 +115,8 @@ namespace Demo.LCSK
             }
         }
 
-        public void LogVisit(string page, string referrer, string city, string region, string country, string existingChatId)
+        public void LogVisit(string userName, string referrer, string city, string region, string country, string existingChatId)
+
         {
             if (_agents == null)
                 _agents = new ConcurrentDictionary<string, Agent>();
@@ -128,7 +129,7 @@ namespace Demo.LCSK
                 _chatSessions.ContainsKey(existingChatId))
             {
                 var agentId = _chatSessions[existingChatId];
-                Clients.Client(agentId).visitorSwitchPage(existingChatId, Context.ConnectionId, page);
+                Clients.Client(agentId).visitorSwitchPage(existingChatId, Context.ConnectionId, userName);
                 var agent = _agents.SingleOrDefault(x => x.Value.Id == agentId).Value;
 
                 if (agent != null)
@@ -146,13 +147,13 @@ namespace Demo.LCSK
                                where c.Key == Context.ConnectionId
                                select a.Value.Name).SingleOrDefault();
 
-                Clients.Client(agent.Value.Id).newVisit(page, referrer, cityDisplayName, countryDisplayName, chatWith, Context.ConnectionId);
+                Clients.Client(agent.Value.Id).newVisit(userName, referrer, cityDisplayName, countryDisplayName, chatWith, Context.ConnectionId);
             }
         }
 
         public void RequestChat(string message)
         {
-            // We assign the chat to the less buzy agent
+            // We assign the chat to the less busy agent
             var workload = from a in _agents
                            where a.Value.IsOnline
                            select new
@@ -162,18 +163,18 @@ namespace Demo.LCSK
                                Count = _chatSessions.Count(x => x.Value == a.Value.Id)
                            };
 
-            var lessBuzy = workload.OrderBy(x => x.Count).FirstOrDefault();
-            if (lessBuzy == null)
+            var lessbusy = workload.OrderBy(x => x.Count).FirstOrDefault();
+            if (lessbusy == null)
             {
                 Clients.Caller.addMessage("", "No agent are currently available.");
                 return;
             }
             
-            _chatSessions.TryAdd(Context.ConnectionId, lessBuzy.Id);
-            Clients.Client(lessBuzy.Id).newChat(Context.ConnectionId);
-            Clients.Caller.setChat(Context.ConnectionId, lessBuzy.Name, false);
+            _chatSessions.TryAdd(Context.ConnectionId, lessbusy.Id);
+            Clients.Client(lessbusy.Id).newChat(Context.ConnectionId);
+            Clients.Caller.setChat(Context.ConnectionId, lessbusy.Name, false);
             message = Regex.Replace(message, @"(\b(?:(?:(?:https?|ftp|file)://|www\.|ftp\.)[-A-Z0-9+&@#/%?=~_|$!:,.;]*[-A-Z0-9+&@#/%=~_|$]|((?:mailto:)?[A-Z0-9._%+-]+@[A-Z0-9._%-]+\.[A-Z]{2,6})\b)|""(?:(?:https?|ftp|file)://|www\.|ftp\.)[^""\r\n]+""|'(?:(?:https?|ftp|file)://|www\.|ftp\.)[^'\r\n]+')", "<a target='_blank' href='$1'>$1</a>", RegexOptions.IgnoreCase | RegexOptions.Multiline);
-            Clients.Client(lessBuzy.Id).addMessage(Context.ConnectionId, "visitor", message);
+            Clients.Client(lessbusy.Id).addMessage(Context.ConnectionId, "visitor", message);
             Clients.Caller.addMessage("me", message);
         }
 
@@ -240,18 +241,18 @@ namespace Demo.LCSK
                                    Count = _chatSessions.Count(x => x.Value == a.Value.Id)
                                };
 
-                var lessBuzy = workload.OrderBy(x => x.Count).FirstOrDefault();
-                if (lessBuzy == null)
+                var lessbusy = workload.OrderBy(x => x.Count).FirstOrDefault();
+                if (lessbusy == null)
                 {
                     Clients.Caller.addMessage("", "No agent are currently available.");
                     return;
                 }
 
-                _chatSessions.TryAdd(Context.ConnectionId, lessBuzy.Id);
-                Clients.Client(lessBuzy.Id).newChat(Context.ConnectionId);
-                Clients.Caller.setChat(Context.ConnectionId, lessBuzy.Name, false);
-                Clients.Client(lessBuzy.Id).addMessage(Context.ConnectionId, "system", "This visitor appear to have lost their chat session.");
-                Clients.Client(lessBuzy.Id).addMessage(Context.ConnectionId, "visitor", data);
+                _chatSessions.TryAdd(Context.ConnectionId, lessbusy.Id);
+                Clients.Client(lessbusy.Id).newChat(Context.ConnectionId);
+                Clients.Caller.setChat(Context.ConnectionId, lessbusy.Name, false);
+                Clients.Client(lessbusy.Id).addMessage(Context.ConnectionId, "system", "This visitor appear to have lost their chat session.");
+                Clients.Client(lessbusy.Id).addMessage(Context.ConnectionId, "visitor", data);
             }
         }
 
@@ -306,7 +307,7 @@ namespace Demo.LCSK
             }
 
             // was it a visitor
-            if (_chatSessions.ContainsKey(id))
+            if (_chatSessions !=null && _chatSessions.ContainsKey(id))
             {
                 var agentId = _chatSessions[id];
                 Clients.Client(agentId).addMessage(id, "system", "The visitor close the connection.");
